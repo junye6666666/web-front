@@ -1,1 +1,1 @@
-<template><h1>分类管理页面</h1></template>
+<template><h1>分类管理</h1></template>
