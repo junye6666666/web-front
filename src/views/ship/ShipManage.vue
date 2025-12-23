@@ -1,15 +1,26 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue' // ✅ 1. 引入 computed
 import { Edit, Delete, Plus, Search, Goods } from '@element-plus/icons-vue'
 import { shipListService, shipAddService, shipUpdateService, shipDeleteService } from '@/api/ship.js'
 import { shipCategoryListService } from '@/api/category.js'
 import { charterShipService } from '@/api/charter.js'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useTokenStore } from '@/stores/counter.js'
 
 // --- 数据定义 ---
 const shipList = ref([]) 
 const total = ref(0)     
 const loading = ref(false) 
+
+const tokenStore = useTokenStore()
+
+// ✅✅✅ 关键修改：使用 computed 包裹 headers
+// 这样每次上传时，都会去 store 里拿最新的 token，防止刷新页面后 token 丢失
+const uploadHeaders = computed(() => {
+    return {
+        'Authorization': tokenStore.token
+    }
+})
 
 const searchModel = ref({
     pageNum: 1,
@@ -22,6 +33,24 @@ const searchModel = ref({
 const categorys = ref([])
 
 // --- 方法定义 ---
+const handleUploadSuccess = (result) => {
+    if (result.code === 0) {
+        shipForm.value.imageUrl = result.data; 
+        ElMessage.success('图片上传成功');
+    } else {
+        ElMessage.error(result.message || '上传失败');
+    }
+}
+const handleUploadError = (error) => {
+    // 如果是 401，提示去登录
+    if (error.status === 401) {
+        ElMessage.error('登录已过期，请重新登录');
+    } else {
+        ElMessage.error('上传失败，请检查网络');
+    }
+    console.error(error);
+}
+
 const getCategorys = async () => {
     let result = await shipCategoryListService();
     categorys.value = result.data; 
@@ -65,7 +94,7 @@ const shipForm = ref({
     imoNum: '',
     categoryId: '',
     state: 'Available',
-    imageUrl: ''
+    imageUrl: '' 
 })
 
 const openAdd = () => {
@@ -118,13 +147,13 @@ const onCharter = (row) => {
         '租船确认',
         {
             confirmButtonText: '立即租借',
-            cancelButtonText: '我再想想',
+            cancelButtonText: '取消',
             type: 'success',
         }
     ).then(async () => {
         await charterShipService(row.id);
-        ElMessage.success('租借成功！请前往租赁记录查看');
-        getShipList();
+        ElMessage.success('租借成功！');
+        getShipList(); 
     }).catch(() => {})
 }
 
@@ -179,8 +208,7 @@ onMounted(() => {
               <el-tag v-else type="danger" effect="light">维修中</el-tag>
           </template>
       </el-table-column>
-      
-      <el-table-column label="操作" width="220" align="center" fixed="right">
+      <el-table-column label="操作" width="240" align="center" fixed="right">
         <template #default="{ row }">
           <div style="display: flex; justify-content: center; align-items: center; gap: 8px;">
               <el-button 
@@ -193,14 +221,11 @@ onMounted(() => {
               >
                 租借
               </el-button>
-              <div v-else style="width: 66px"></div>
-
               <el-button :icon="Edit" circle plain type="primary" size="small" @click="openEdit(row)"></el-button>
               <el-button :icon="Delete" circle plain type="danger" size="small" @click="onDelete(row)"></el-button>
           </div>
         </template>
       </el-table-column>
-      
       <template #empty>
         <el-empty description="暂无数据" />
       </template>
@@ -239,9 +264,22 @@ onMounted(() => {
                     <el-radio label="Maintenance">维修</el-radio>
                  </el-radio-group>
             </el-form-item>
-            <el-form-item label="图片链接">
-                <el-input v-model="shipForm.imageUrl" placeholder="http://..."></el-input>
+            
+            <el-form-item label="船舶图片">
+                <el-upload
+                    class="avatar-uploader"
+                    action="/api/upload"
+                    :show-file-list="false"
+                    :on-success="handleUploadSuccess"
+                    :on-error="handleUploadError"
+                    :headers="uploadHeaders" 
+                    name="file"
+                >
+                    <img v-if="shipForm.imageUrl" :src="shipForm.imageUrl" class="avatar" />
+                    <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+                </el-upload>
             </el-form-item>
+
         </el-form>
         <template #footer>
             <span class="dialog-footer">
@@ -254,7 +292,7 @@ onMounted(() => {
   </el-card>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .page-container {
     min-height: 100%;
     box-sizing: border-box;
@@ -263,5 +301,40 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.avatar-uploader {
+    :deep() {
+        .avatar {
+            width: 120px;
+            height: 120px;
+            display: block;
+            object-fit: cover;
+        }
+
+        .el-upload {
+            border: 1px dashed var(--el-border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: var(--el-transition-duration-fast);
+            width: 120px;
+            height: 120px;
+        }
+
+        .el-upload:hover {
+            border-color: var(--el-color-primary);
+        }
+
+        .el-icon.avatar-uploader-icon {
+            font-size: 28px;
+            color: #8c939d;
+            width: 120px;
+            height: 120px;
+            text-align: center;
+            line-height: 120px;
+        }
+    }
 }
 </style>

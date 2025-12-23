@@ -1,25 +1,27 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import vueDevTools from 'vite-plugin-vue-devtools'
 
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
+    vueDevTools(),
   ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
+    },
   },
-  // ✅ 必须加上 server 配置
+  // ✅✅✅ 这一段你之前漏了，必须加上！
   server: {
-    port: 5173, 
+    port: 5173, // 前端端口
     proxy: {
-      '/api': {
-        target: 'http://localhost:8080', // 后端地址
+      '/api': { // 拦截所有以 /api 开头的请求
+        target: 'http://localhost:8080', // 转发给后端 8080
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '') // 去掉 /api 前缀
+        rewrite: (path) => path.replace(/^\/api/, '') // 去掉 /api
       }
     }
   }

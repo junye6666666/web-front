@@ -1,42 +1,42 @@
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
 import router from '@/router'
+// ✅ 1. 引入 Token 仓库
+import { useTokenStore } from '@/stores/counter.js'
 
-const baseURL = 'http://localhost:8080'; // 你的后端地址
+const baseURL = '/api';
 
 const instance = axios.create({
     baseURL, 
-    timeout: 5000 // 超时时间
+    timeout: 10000 
 });
 
-// 1. 请求拦截器：每次发请求前，自动带上 Token
+// --- 请求拦截器 ---
 instance.interceptors.request.use(
     (config) => {
-        // 从浏览器缓存获取 token
-        const token = localStorage.getItem('token');
-        if (token) {
-            // ✅ 修改点：后端现在不要求 Bearer 前缀了，所以直接发送 token 字符串
-            // 之前的写法: config.headers.Authorization = `Bearer ${token}`
-            config.headers.Authorization = token;
+        // ✅ 2. 在拦截器内部获取 store 实例
+        const tokenStore = useTokenStore();
+        
+        // ✅ 3. 判断 store 里是否有 token
+        if (tokenStore.token) {
+            // 直接使用 store 里的 token，它是干净的字符串
+            config.headers.Authorization = tokenStore.token;
         }
         return config;
     },
     (err) => Promise.reject(err)
 );
 
-// 2. 响应拦截器：统一处理返回结果
+// --- 响应拦截器 ---
 instance.interceptors.response.use(
     (res) => {
-        // 只要是 200，说明后端通了
         if (res.data.code === 0) {
-            return res.data; // 剥离外层，直接返回数据
+            return res.data; 
         }
-        // 如果 code 不是 0，说明业务失败（比如密码错误）
         ElMessage.error(res.data.message || '服务异常');
         return Promise.reject(res.data);
     },
     (err) => {
-        // HTTP 状态码报错 (401, 500 等)
         if (err.response?.status === 401) {
             ElMessage.error('登录过期，请重新登录');
             router.push('/login');
