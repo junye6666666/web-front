@@ -1,7 +1,21 @@
-import request from '@/utils/request'
+import request from '@/utils/request.js'
 
-// 获取分类列表 (这里我们不需要分页，假设后端有一个查所有的接口，或者我们取第一页查100个)
-export const categoryListService = () => {
-    // 如果后端没有专门的“查所有”接口，我们就查第一页，给个大点的 pageSize
-    return request.get('/ship-category', { params: { pageNum: 1, pageSize: 100 } })
-}                                                                                                                                                                                                                                                                                                                    
+// 1. 获取分类列表 (统一命名为 shipCategoryListService)
+export const shipCategoryListService = () => {
+    return request.get('/ship-category')
+}
+
+// 2. 新增分类
+export const shipCategoryAddService = (categoryData) => {
+    return request.post('/ship-category', categoryData)
+}
+
+// 3. 修改分类
+export const shipCategoryUpdateService = (categoryData) => {
+    return request.put('/ship-category', categoryData)
+}
+
+// 4. 删除分类
+export const shipCategoryDeleteService = (id) => {
+    return request.delete('/ship-category', { params: { id } })
+}

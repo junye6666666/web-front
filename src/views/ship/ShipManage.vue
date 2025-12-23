@@ -2,7 +2,8 @@
 import { ref, onMounted } from 'vue'
 import { Edit, Delete, Plus, Search } from '@element-plus/icons-vue'
 import { shipListService, shipAddService, shipUpdateService, shipDeleteService } from '@/api/ship.js'
-import { categoryListService } from '@/api/category.js'
+// ✅ 关键修复点：这里必须引用 shipCategoryListService
+import { shipCategoryListService } from '@/api/category.js'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 // --- 1. 数据定义 ---
@@ -26,8 +27,10 @@ const categorys = ref([])
 
 // 获取分类列表 (用于下拉框)
 const getCategorys = async () => {
-    let result = await categoryListService();
-    categorys.value = result.data.items; 
+    // ✅ 修复点：调用正确的方法名
+    let result = await shipCategoryListService();
+    // 后端返回的是列表数组，直接赋值
+    categorys.value = result.data; 
 }
 
 // 获取船舶列表
@@ -94,7 +97,7 @@ const openAdd = () => {
 const openEdit = (row) => {
     title.value = '编辑船舶'
     dialogVisible.value = true
-    // 复制当前行数据到表单 (解构赋值，避免直接修改原对象)
+    // 复制当前行数据到表单
     shipForm.value = { ...row }
 }
 
@@ -136,7 +139,9 @@ onMounted(() => {
     <template #header>
       <div class="header">
         <span>船舶管理</span>
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增船舶</el-button>
+        <div class="extra">
+             <el-button type="primary" :icon="Plus" @click="openAdd">新增船舶</el-button>
+        </div>
       </div>
     </template>
 

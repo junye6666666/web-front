@@ -15,7 +15,9 @@ instance.interceptors.request.use(
         // 从浏览器缓存获取 token
         const token = localStorage.getItem('token');
         if (token) {
-            config.headers.Authorization = `Bearer ${token}`
+            // ✅ 修改点：后端现在不要求 Bearer 前缀了，所以直接发送 token 字符串
+            // 之前的写法: config.headers.Authorization = `Bearer ${token}`
+            config.headers.Authorization = token;
         }
         return config;
     },
