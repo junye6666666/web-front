@@ -12,14 +12,14 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  // ✅ 必须加上 server 配置
   server: {
-    port: 5173, // 前端端口
+    port: 5173, 
     proxy: {
-      // ✅✅✅ 关键配置：配置代理
       '/api': {
         target: 'http://localhost:8080', // 后端地址
-        changeOrigin: true, // 允许跨域
-        rewrite: (path) => path.replace(/^\/api/, '') // 关键：把 /api 去掉，变成 /upload 发给后端
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '') // 去掉 /api 前缀
       }
     }
   }

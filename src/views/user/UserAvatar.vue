@@ -8,26 +8,28 @@ import { useUserInfoStore } from '@/stores/userInfo.js'
 const userInfoStore = useUserInfoStore()
 const imgUrl = ref(userInfoStore.info.userPic)
 
-// ✅ 1. 获取 Token
-const token = localStorage.getItem('token') 
+// 获取 Token
+const token = localStorage.getItem('token')
 
-// ✅ 2. 定义上传请求头 (根据你之前的要求，不加 Bearer)
-const uploadHeaders = {
-    'Authorization': token 
-}
-
+// ✅ 1. 上传成功回调
+// 这里的 result 是上传接口返回的图片地址
 const handleAvatarSuccess = (result) => {
-    // 处理后端返回结果 (Result对象)
+    // 根据后端返回结构，result.data 通常是图片 URL
     if (result.code === 0) {
         imgUrl.value = result.data; 
     } else {
-        ElMessage.error(result.message || '上传失败');
+        ElMessage.error(result.message || '图片上传失败');
     }
 }
 
+// ✅ 2. 确认修改 (核心：调用 UserController)
 const updateAvatar = async () => {
+    // 调用 api/user.js 中的方法，发送 PATCH 请求给 UserController
     await userAvatarUpdateService(imgUrl.value);
+    
+    // 更新本地显示
     userInfoStore.info.userPic = imgUrl.value;
+
     ElMessage.success('头像修改成功');
 }
 </script>
@@ -46,7 +48,7 @@ const updateAvatar = async () => {
                     action="/api/upload"
                     :show-file-list="false"
                     :on-success="handleAvatarSuccess"
-                    :headers="uploadHeaders"
+                    :headers="{'Authorization': token}"
                     name="file"
                 >
                     <img v-if="imgUrl" :src="imgUrl" class="avatar" />
