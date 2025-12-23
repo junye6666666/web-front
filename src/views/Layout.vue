@@ -1,9 +1,20 @@
 <script setup>
-import { Management, List, Promotion, UserFilled, CaretBottom, SwitchButton, User } from '@element-plus/icons-vue'
+import { Management, List, Promotion, UserFilled, CaretBottom, SwitchButton, User, Crop, EditPen } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useUserInfoStore } from '@/stores/userInfo.js' // 引入 store
+import { userInfoService } from '@/api/user.js' // 引入接口
 
 const router = useRouter()
+const userInfoStore = useUserInfoStore() // 获取 store 实例
+
+// ✅ 1. 页面加载时，调用接口获取用户信息
+const getUserInfo = async () => {
+    let result = await userInfoService();
+    // 把获取到的数据存入 Pinia Store
+    userInfoStore.setInfo(result.data);
+}
+getUserInfo(); // 执行
 
 // 下拉菜单命令处理
 const handleCommand = (command) => {
@@ -17,12 +28,15 @@ const handleCommand = (command) => {
                 type: 'warning',
             }
         ).then(() => {
-            // 1. 清空 token
+            // 清空 token 和 用户信息
             localStorage.removeItem('token')
-            // 2. 跳转回登录页
+            userInfoStore.removeInfo()
             router.push('/login')
             ElMessage.success('退出成功')
         }).catch(() => {})
+    } else {
+        // 跳转到对应页面 (如 profile -> /user/info)
+        router.push('/user/' + (command === 'profile' ? 'info' : command))
     }
 }
 </script>
@@ -76,15 +90,16 @@ const handleCommand = (command) => {
 
     <el-container>
       <el-header>
-        <div>当前用户：<strong>管理员</strong></div>
+        <div>当前用户：<strong>{{ userInfoStore.info.nickname || '用户' }}</strong></div>
         <el-dropdown placement="bottom-end" @command="handleCommand">
             <span class="el-dropdown__box">
-                <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
+                <el-avatar :src="userInfoStore.info.userPic || 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'" />
                 <el-icon><CaretBottom /></el-icon>
             </span>
             <template #dropdown>
                 <el-dropdown-menu>
                     <el-dropdown-item command="profile" :icon="User">基本资料</el-dropdown-item>
+                    <el-dropdown-item command="avatar" :icon="Crop">更换头像</el-dropdown-item>
                     <el-dropdown-item command="logout" :icon="SwitchButton">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
             </template>
