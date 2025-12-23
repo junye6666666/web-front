@@ -12,6 +12,7 @@ import CharterRecordVue from '@/views/charter/CharterRecord.vue'
 import UserInfoVue from '@/views/user/UserInfo.vue'
 import UserAvatarVue from '@/views/user/UserAvatar.vue'
 import UserResetPasswordVue from '@/views/user/UserResetPassword.vue'
+import MaintenanceVue from '@/views/maintenance/MaintenanceRecord.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,7 +30,8 @@ const router = createRouter({
         // ✅ 配置个人中心路由 (对应 Layout.vue 里的路径)
         { path: '/user/info', component: UserInfoVue },
         { path: '/user/avatar', component: UserAvatarVue },
-        { path: '/user/password', component: UserResetPasswordVue }, // 注意这里是 /user/password
+        { path: '/user/password', component: UserResetPasswordVue },
+        { path: '/maintenance', component: MaintenanceVue }, // 注意这里是 /user/password
       ]
     }
   ]

@@ -67,6 +67,11 @@ const handleCommand = (command) => {
           <span>租赁记录</span>
         </el-menu-item>
 
+        <el-menu-item index="/maintenance">
+  <el-icon><Tools /></el-icon> 
+  <span>维护保养</span>
+</el-menu-item>
+
         <el-sub-menu index="/user">
             <template #title>
                 <el-icon><UserFilled /></el-icon>
