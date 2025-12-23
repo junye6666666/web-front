@@ -108,7 +108,7 @@ const handleCommand = (command) => {
     background-color: #232323;
     &__logo {
       height: 120px;
-      background: url('@/assets/logo.svg') no-repeat center / 120px auto;
+      background: url('@/assets/shouye.jpg') no-repeat center / 200px auto;
     }
     .el-menu {
       border-right: none;
