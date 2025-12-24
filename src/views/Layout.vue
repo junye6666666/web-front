@@ -1,22 +1,20 @@
 <script setup>
-import { Management, List, Promotion, UserFilled, CaretBottom, SwitchButton, User, Crop, EditPen } from '@element-plus/icons-vue'
+// ✅ 引入 Odometer 图标
+import { Management, List, Promotion, UserFilled, CaretBottom, SwitchButton, User, Crop, EditPen, Tools, Odometer } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useUserInfoStore } from '@/stores/userInfo.js' // 引入 store
-import { userInfoService } from '@/api/user.js' // 引入接口
+import { useUserInfoStore } from '@/stores/userInfo.js'
+import { userInfoService } from '@/api/user.js'
 
 const router = useRouter()
-const userInfoStore = useUserInfoStore() // 获取 store 实例
+const userInfoStore = useUserInfoStore()
 
-// ✅ 1. 页面加载时，调用接口获取用户信息
 const getUserInfo = async () => {
     let result = await userInfoService();
-    // 把获取到的数据存入 Pinia Store
     userInfoStore.setInfo(result.data);
 }
-getUserInfo(); // 执行
+getUserInfo();
 
-// 下拉菜单命令处理
 const handleCommand = (command) => {
     if (command === 'logout') {
         ElMessageBox.confirm(
@@ -28,14 +26,12 @@ const handleCommand = (command) => {
                 type: 'warning',
             }
         ).then(() => {
-            // 清空 token 和 用户信息
             localStorage.removeItem('token')
             userInfoStore.removeInfo()
             router.push('/login')
             ElMessage.success('退出成功')
         }).catch(() => {})
     } else {
-        // 跳转到对应页面 (如 profile -> /user/info)
         router.push('/user/' + (command === 'profile' ? 'info' : command))
     }
 }
@@ -52,6 +48,11 @@ const handleCommand = (command) => {
         router
         :default-active="$route.path"
       >
+        <el-menu-item index="/dashboard">
+          <el-icon><Odometer /></el-icon>
+          <span>系统首页</span>
+        </el-menu-item>
+
         <el-menu-item index="/ship">
           <el-icon><Promotion /></el-icon>
           <span>船舶管理</span>
@@ -68,9 +69,9 @@ const handleCommand = (command) => {
         </el-menu-item>
 
         <el-menu-item index="/maintenance">
-  <el-icon><Tools /></el-icon> 
-  <span>维护保养</span>
-</el-menu-item>
+          <el-icon><Tools /></el-icon> 
+          <span>维护保养</span>
+        </el-menu-item>
 
         <el-sub-menu index="/user">
             <template #title>
