@@ -17,6 +17,11 @@ export default defineConfig({
   // ✅✅✅ 这一段你之前漏了，必须加上！
   server: {
     port: 5173, // 前端端口
+
+    host : true,
+    allowedHosts: [
+      '76b3af26.r5.cpolar.top',
+      'localhost'],
     proxy: {
       '/api': { // 拦截所有以 /api 开头的请求
         target: 'http://localhost:8080', // 转发给后端 8080

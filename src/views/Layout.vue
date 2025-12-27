@@ -116,7 +116,7 @@ const handleCommand = (command) => {
         <router-view></router-view>
       </el-main>
       
-      <el-footer>船舶管理系统 ©2023 Created by You</el-footer>
+      <el-footer>船舶管理系统 ©2025 Created by 祁小俊</el-footer>
     </el-container>
   </el-container>
 </template>
