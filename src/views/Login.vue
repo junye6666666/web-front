@@ -12,11 +12,14 @@ const tokenStore = useTokenStore()
 
 // 表单数据
 const registerData = ref({ username: '', password: '', rePassword: '' })
+
+// ✅ 1. 在 loginData 中增加 rememberMe 字段
 const loginData = ref({
     username: '',
     password: '',
     uuid: '', 
-    code: ''  
+    code: '',
+    rememberMe: false 
 })
 
 const captchaImg = ref('')
@@ -51,6 +54,13 @@ const refreshCaptcha = async () => {
 
 onMounted(() => {
     refreshCaptcha()
+    
+    // ✅ 2. 页面加载时，检查本地是否有存过的用户名
+    const savedName = localStorage.getItem('saved_username')
+    if (savedName) {
+        loginData.value.username = savedName
+        loginData.value.rememberMe = true // 自动勾选上
+    }
 })
 
 const register = async () => {
@@ -69,6 +79,14 @@ const login = async () => {
     let result = await userLoginService(loginData.value)
     ElMessage.success('登录成功')
     tokenStore.setToken(result.data)
+
+    // ✅ 3. 登录成功后，根据是否勾选决定是存储还是清除
+    if (loginData.value.rememberMe) {
+        localStorage.setItem('saved_username', loginData.value.username)
+    } else {
+        localStorage.removeItem('saved_username')
+    }
+
     router.push('/')
 }
 
@@ -159,8 +177,8 @@ const clearRegisterData = () => {
                     </el-form-item>
 
                     <div class="form-options">
-                        <el-checkbox>记住我</el-checkbox>
-                        <el-link type="primary" :underline="false">忘记密码？</el-link>
+                        <el-checkbox v-model="loginData.rememberMe">记住用户名</el-checkbox>
+                       
                     </div>
 
                     <el-form-item>
@@ -180,6 +198,7 @@ const clearRegisterData = () => {
 </template>
 
 <style lang="scss" scoped>
+/* 样式保持和你之前的一样，直接复制过来即可 */
 .login-container {
     display: flex;
     height: 100vh;
@@ -187,23 +206,18 @@ const clearRegisterData = () => {
     overflow: hidden;
     background-color: #f0f2f5;
 
-    // 左侧区域
     .login-left {
-        flex: 1.5; // 占据较大比例 (60%左右)
-        // 使用在线图片，你也可以换成你本地的 @/assets/bg.jpg
-        //background: url('https://images.unsplash.com/photo-1548270150-13170e28c775?q=80&w=2574&auto=format&fit=crop') no-repeat center center;
+        flex: 1.5; 
         background: url('@/assets/login_bg.jpg') no-repeat center center;
         background-size: cover;
         position: relative;
 
-        // 遮罩层，让文字更清晰
         .login-left-mask {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            //background: linear-gradient(135deg, rgba(24, 144, 255, 0.8), rgba(0, 58, 140, 0.9));
             display: flex;
             align-items: center;
             justify-content: center;
@@ -233,31 +247,25 @@ const clearRegisterData = () => {
             }
         }
     }
-  }
-/* ... 前面的 .login-container 和 .login-left 不用动 ... */
+}
 
-// --- ✅ 修改开始：右侧区域优化 ---
 .login-right {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    // 1. 给右侧整体加一个极淡的灰蓝色背景，不再是死板的纯白
     background-color: #f6f8fa; 
 
     .form-box {
         width: 100%;
-        max-width: 420px; // 稍微宽一点点
+        max-width: 420px;
         padding: 50px 40px;
-        
-        // 2. ✅ 核心修改：卡片化效果
         background: #ffffff;
-        border-radius: 16px; // 大圆角
-        // 加一个柔和的投影，让表单浮起来
+        border-radius: 16px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05); 
 
         .form-header {
-            text-align: center; // 让标题居中
+            text-align: center;
             margin-bottom: 40px;
             
             h2 {
@@ -273,18 +281,17 @@ const clearRegisterData = () => {
             }
         }
 
-        // 3. ✅ 优化输入框样式 (利用 :deep 穿透修改 Element Plus 样式)
         :deep(.el-input__wrapper) {
-            background-color: #f5f7fa; // 输入框背景改成浅灰，不那么刺眼
-            box-shadow: none; // 去掉默认边框
+            background-color: #f5f7fa; 
+            box-shadow: none; 
             border: 1px solid transparent;
-            border-radius: 8px; // 输入框圆角
-            padding: 8px 15px; // 增加内边距，显大
+            border-radius: 8px; 
+            padding: 8px 15px; 
             transition: all 0.3s;
             
             &.is-focus {
                 background-color: #fff;
-                border-color: #409eff; // 聚焦时变回白色并亮起边框
+                border-color: #409eff; 
                 box-shadow: 0 0 0 1px #409eff inset; 
             }
         }
@@ -296,7 +303,7 @@ const clearRegisterData = () => {
             
             .captcha-img {
                 width: 120px;
-                height: 48px; // 和输入框高度对齐
+                height: 48px; 
                 border-radius: 8px;
                 cursor: pointer;
                 border: 1px solid #eee;
@@ -313,18 +320,18 @@ const clearRegisterData = () => {
 
         .submit-btn {
             width: 100%;
-            height: 48px; // 按钮加高
+            height: 48px; 
             font-size: 16px;
             font-weight: bold;
             border-radius: 8px;
             letter-spacing: 2px;
-            background: linear-gradient(90deg, #409eff, #337ecc); // 按钮加渐变
+            background: linear-gradient(90deg, #409eff, #337ecc); 
             border: none;
-            box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3); // 按钮光晕
+            box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3); 
             
             &:hover {
                 background: linear-gradient(90deg, #66b1ff, #409eff);
-                transform: translateY(-1px); // 鼠标悬停轻微上浮
+                transform: translateY(-1px); 
             }
             &:active {
                 transform: translateY(0);
@@ -345,18 +352,15 @@ const clearRegisterData = () => {
     }
 }
 
-// 响应式部分也稍微调整，保持统一
 @media (max-width: 900px) {
     .login-left {
         display: none;
     }
     .login-right {
-        // 手机端背景直接用图片
         background: url('@/assets/login_bg.jpg') no-repeat center center;
         background-size: cover;
         
         .form-box {
-            // 手机端保持半透明磨砂效果
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
