@@ -1,36 +1,47 @@
 <script setup>
 import { Plus, Upload } from '@element-plus/icons-vue'
-import { ref } from 'vue'
+import { ref, computed } from 'vue' // ✅ 1. 引入 computed
 import { userAvatarUpdateService } from '@/api/user.js'
 import { ElMessage } from 'element-plus'
 import { useUserInfoStore } from '@/stores/userInfo.js'
+import { useTokenStore } from '@/stores/counter.js' // ✅ 2. 引入 Token Store
 
 const userInfoStore = useUserInfoStore()
+const tokenStore = useTokenStore() // ✅ 3. 使用 Token Store
+
 const imgUrl = ref(userInfoStore.info.userPic)
 
-// 获取 Token
-const token = localStorage.getItem('token')
+// ✅ 4. 使用 computed 动态获取最新的 token
+// 这样即使页面刚刷新，也能从持久化的 Pinia 中正确拿到 token
+const uploadHeaders = computed(() => {
+    return {
+        'Authorization': tokenStore.token
+    }
+})
 
-// ✅ 1. 上传成功回调
-// 这里的 result 是上传接口返回的图片地址
+// 上传成功回调 (此时只是上传到了服务器/OSS，还没更新用户数据库中的头像字段)
 const handleAvatarSuccess = (result) => {
-    // 根据后端返回结构，result.data 通常是图片 URL
     if (result.code === 0) {
         imgUrl.value = result.data; 
+        ElMessage.success('图片上传成功，请点击“确认修改”保存');
     } else {
         ElMessage.error(result.message || '图片上传失败');
     }
 }
 
-// ✅ 2. 确认修改 (核心：调用 UserController)
+// 确认修改 (核心：调用接口更新数据库，并同步更新本地 Store)
 const updateAvatar = async () => {
-    // 调用 api/user.js 中的方法，发送 PATCH 请求给 UserController
-    await userAvatarUpdateService(imgUrl.value);
-    
-    // 更新本地显示
-    userInfoStore.info.userPic = imgUrl.value;
+    try {
+        // 调用 api/user.js 中的方法
+        await userAvatarUpdateService(imgUrl.value);
+        
+        // ✅ 5. 更新本地 Pinia 中的用户信息，确保页面右上角等位置的头像同步变化
+        userInfoStore.info.userPic = imgUrl.value;
 
-    ElMessage.success('头像修改成功');
+        ElMessage.success('头像修改成功');
+    } catch (error) {
+        ElMessage.error('修改失败');
+    }
 }
 </script>
 
@@ -48,7 +59,7 @@ const updateAvatar = async () => {
                     action="/api/upload"
                     :show-file-list="false"
                     :on-success="handleAvatarSuccess"
-                    :headers="{'Authorization': token}"
+                    :headers="uploadHeaders" 
                     name="file"
                 >
                     <img v-if="imgUrl" :src="imgUrl" class="avatar" />
